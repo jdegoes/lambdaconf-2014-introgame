@@ -197,8 +197,8 @@ We now have enough tools to write a purely functional game loop!
 
 ### Exercises
 
- 1. Using the IO monad built in this section, write a simple program that asks the user for his or her name, then prints out, "Hello, [name]", where "[name]" is the user's name.
- 2. See if you can add a conditional, so that if the name string is empty, the program prints out, "You must have a name!" Hint: If you get stuck, try using `map` and `flatMap` instead of `for` notation.
+ 1. Using the IO monad built in this section, write a simple program that asks the user for his or her name, then prints out, "Hello, [name]". Don't cheat and print out the text literal "[name]", either! :-)
+ 2. Try to add a conditional, so that if the name string is empty, the program spits out, "You must have a name!" Hint: If you get stuck, try using `map` and `flatMap` instead of Scala's `for` notation.
  
 ## The Super Simple, Pure FP Game Loop
 
