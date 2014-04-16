@@ -626,15 +626,15 @@ def update[A](lens: Lens[GameState, A])(f: A => A): Game[A] = state[A] { (s: Gam
 }
 ```
 
-Now updating health, *or any other field regardless of how nested it is inside the game state*, becomes as simple as follows:
+Now updating health, *or any other field regardless of how deeply nested it is*, becomes as simple as follows:
 
 ```scala
 def updateHealth(delta: Int): Game[Int] = update(player |-> health)(_ + delta)
 ```
 
-That's powerful, and it just scratches the surface of what these abstractions are capable of.
+That's powerful (at this point, we don't even need the helper function), and it just scratches the surface of what these abstractions are capable of.
 
-We don't need anything else to build a functional game. We have all the tools. So let's put them to use!
+We have all the tools we need to build a purely-functional game. So let's put them to use!
 
 ### Exercises
 
@@ -643,12 +643,40 @@ We don't need anything else to build a functional game. We have all the tools. S
 
 # Tying it all Together
 
-You now have a choice: you can take the code you've built up to this point (you have been completing the exercises, right?), or you can jump ship and use the code in the `src` directory.
+You now have a choice: you can take the code you've built up to this point (you *have* been completing the exercises, right?), or you can jump ship and use the code in the `src` directory.
 
-The code in the `src` repository builds on the material presented this far (for example, adding basic command parsing so you don't have to worry about that), and uses the Scalaz and Monocle libraries for super-powered versions of some of the classes built here (`Monad`, `StateT`, `IO` AKA `Task`, `Lens`, etc.). 
+The code in the `src` repository builds on the material presented thus far (for example, adding basic command parsing so you don't have to worry about that), and uses the Scalaz and Monocle libraries for super-powered versions of some of the classes built here (`Monad`, `StateT`, `IO` AKA `Task`, `Lens`, etc.).
 
-Ready? Let's build that game!
+You can launch the existing game very simply for testing:
+
+```
+31 introgame % sbt                                                                                                                                     2014-04-15 21:23:29 John ttys002
+Detected sbt version 0.13.0
+Starting sbt: invoke with -help for other options
+Using /Users/John/.sbt/0.13.0 as sbt dir, -sbt-dir to override.
+[info] Loading project definition from /Users/John/Documents/github/lambdaconf/introgame/project
+[info] Set current project to introfp (in build file:/Users/John/Documents/github/lambdaconf/introgame/)
+[info] Defining */*:console::traceLevel, */*:consoleProject::traceLevel and 2 others.
+[info] The new values will be used by no settings or tasks.
+[info] 	Run `last` for details.
+[info] Reapplying settings...
+[info] Set current project to introfp (in build file:/Users/John/Documents/github/lambdaconf/introgame/)
+> run
+[info] Compiling 1 Scala source to /Users/John/Documents/github/lambdaconf/introgame/target/scala-2.10/classes...
+[warn] there were 1 deprecation warning(s); re-run with -deprecation for details
+[warn] one warning found
+[info] Running introgame.Main 
+What would you like to do now?
+```
+
+Now let's get to work building that game!
 
 ## Exercises
 
- 1. 
+ 1. Give the player the ability to pick up and put down items in any location (e.g. "pick up rusty sword", "drop rusty sword").
+ 2. Add an `NPC` class that models a non-player character. Extend `Cell` to hold a list of `NPC`s.
+ 3. Classify `NPC`s as "friendly" or "hostile" (you can be more elaborate but this is the bare minimum). If the player looks around, describe friendly and hostile `NPC`s differently.
+ 4. Allow the player to "fight" NPCs, exchanging damage in a deterministic (i.e. non-random) fashion.
+ 5. Allow items to modify the attributes of characters (player or non-player) as well as modify the outcome of a fight.
+ 6. BONUS - HARD: Add a deterministic random effect so you can incorporate randomness into fights. Note: You can do this by sticking the state information in `GameState`, or you can add a `RandomT` monad transformer in the stack (or if you want even more of a challenge, you can add a free algebra describing randomness, and use a coproduct functor to combine that with the existing IO free algebra).
+ 7. BONUS - HARDER: Generate events for all actions that happen, whether to player, the environment, an item, or a NPC, and store these events somewhere for later reference. Refactor the game so that player commands generate events, which in turn might generate other events, etc., and produce state updates through [monoid actions](http://en.wikipedia.org/wiki/Semigroup_action). You will find it much easier to encode game logic using this approach.
