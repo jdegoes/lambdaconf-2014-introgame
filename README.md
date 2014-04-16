@@ -10,21 +10,23 @@ This README file contains a walkthrough for the workshop, as well as the followi
 
 # Introduction
 
-Welcome to Introduction to *Functional Game Programming with Scala*! You're going to learn purely-functional programming by writing a fun little game.
+Welcome to *Introduction to Functional Game Programming with Scala*! You're going to learn purely-functional programming by writing a fun little game.
 
 Games are some of the most stateful applications in existence!
 
-In fact, many games are really full-fledged simulations, in which almost every piece of data changes at every iteration!
+In fact, many games are really full-fledged simulations. Almost every piece of data changes at every iteration!
 
-Can you really use functional programming to write games? Absolutely! And this session is here to show you how.
+Can you really use pure functional programming to write games? The answer is yes, and this workshop is here to show you how.
 
-We're going to focus on writing a text-based RPG (or adventure game, if you like). This removes the need to create and animate graphics and puts the focus on handling state in a functional way.
+We're going to focus on writing a text-based RPG (or adventure game, if you like). This way, you won't need to create or animate graphics, and you can focus on the essence of handling state in a functional way.
 
-Ready? Let's begin!
+Ready? Good, let's begin!
 
 # The Game Loop
 
-At the center of every game is something called a *game loop*. In an imperative style, the game loop might be written as a `while` loop:
+At the center of every game is something called a *game loop*. The game loop handles input and updates the state of the game.
+
+In an imperative style, we could write a game loop using a `while` loop:
 
 ```scala
 var executing = true
@@ -36,7 +38,9 @@ while (executing) {
 }
 ```
 
-With a text RPG, we can flesh this out a bit more. Try writing the following into a Scala file and run it:
+Since we're only focusing on text-based RPG, we can flesh this out a bit more.
+
+Try dumping the following code into an empty file, and executing the file with `scala`:
 
 ```scala
 var executing = true
@@ -51,9 +55,11 @@ while (executing) {
 }
 ```
 
-What's the purely functional alternative to a `while` loop? Recursion!
+This `while` loop prints out your commands until you enter the command "quit", at which point it stops executing.
 
-Let's rewrite the game loop as follows:
+What's the purely-functional alternative to loops? Recursion, of course!
+
+Let's rewrite the game loop using a self-recursive function:
 
 ```scala
 def loop(): Unit = {
@@ -68,20 +74,20 @@ def loop(): Unit = {
 loop()
 ```
 
-> **Note:** In general, unbounded recursion on the JVM will overflow the stack, but there's a robust way to work around that called *trampolining*, which basically involves stuffing steps of the recursion into data structures, and using an "interpreter" to execute the recursion step-by-step (more on this later!).
+> **Note:** In general, unbounded recursion on the JVM will overflow the stack, but there's a robust way to work around this called *trampolining*, which basically involves stuffing steps of the recursion into data structures, and using an "interpreter" to execute the recursion step-by-step.
 
-The above game loop is far from functional. Its type signature (`Unit`) doesn't give us any insight into what it's doing, which makes it harder to reason about. 
+The above game loop is far from functional. The type signature of the function gives us no insight into what it's doing, and the guts of the function aren't any better.
 
-Inside the game loop, there's more of the same, with types telling us very little about what's going on. We have to keep track of a lot of stuff in our head to make sure the logic is right.
+How can we make this game loop more functional and easier to understand?
 
-How can we make this game loop more functional and easier to understand in pieces? 
+There are lots of ways to do this, but the abstraction that's going to help you most as a functional programmer is called a *monad*.
 
-There are lots of ways to do this, but the one that's going to help you most as a functional programmer is *monads*.
+Bet you guessed that, didn't you?
 
 ### Exercises
 
- 1. Write your own game loop using recursion.
- 2. Add the `scala.annotation.@tailrec` annotation to your loop to see if Scala can compiler it to a `while` loop.
+ 1. Write your own game loop using recursion. Hopefully it's more interesting than the provided game loop!
+ 2. Add the `scala.annotation.@tailrec` annotation to your loop to see if Scala can compiler it to a `while` loop. The compiler will give you an error if your function is not [tail-recursive](http://www.haskell.org/haskellwiki/Tail_recursion).
 
 ## Monads
 
@@ -120,16 +126,16 @@ Monads are how a lot of purely functional programs handle stateful and effectful
 
 ### Exercises
 
- 1. Given the code:
-     ```scala
-     sealed trait Errorful[+A] {
-       def flatMap[B](f: A => Errorful[B]): Errorful[B] = ???
-       def map[B](f: A => B): Errorful[B] = flatMap(f andThen (Continue.apply _))
-     }
-     case class Error(message: String) extends Errorful[Nothing]
-     case class Continue[+A](value: A) extends Errorful[A]
-     ````
-     Implement the method `flatMap`. Do you see how you can't call the function supplied to `f` without first having a value of type `A`?
+```scala
+sealed trait Errorful[+A] {
+  def flatMap[B](f: A => Errorful[B]): Errorful[B] = ???
+  def map[B](f: A => B): Errorful[B] = flatMap(f andThen (Continue.apply _))
+}
+case class Error(message: String) extends Errorful[Nothing]
+case class Continue[+A](value: A) extends Errorful[A]
+````
+
+ 1. Given the above code, implement the method `flatMap`. Do you see how you can't call the function supplied to `f` without first having a value of type `A`?
  2. Scala's `for` notation just compiles down to sequences of `flatMap` and `map`. Write a `for` comprehension that uses the `Errorful` monad you just wrote.
 
 ## Effectful Monads
