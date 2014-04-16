@@ -309,7 +309,7 @@ val stateWithNewHealth: State[GameState, Int] = for {
 } yield newHealth
 ```
 
-The result is a `State` action. If we want to perform the action, we have to "run" the `State`. 
+The result is a `State` action. If we want to perform the action, we have to "run" the `State`. How do we do that?
 
 Remember, `State` is just a function from one state to another state and some value. So to "run" `State`, all we have to do is pass it an initial game state:
 
@@ -326,7 +326,7 @@ If you print out the final health, you'll find it's -10. Yep, we succeeded in ki
 
 ### Exercises
 
- 1. Flesh out `GameState` more by adding a `GameMap` and a `PlayerLocation`. Define the `GameMap` as a rectangular grid, where each cell can contain things like a name, description, list of characters, list of items, etc.
+ 1. Flesh out `GameState` more by adding a `GameMap` and an `x: Int` and `y: Int` location. Define the `GameMap` as a rectangular grid, where each cell can contain things like a name, description, list of characters, list of items, etc.
  2. Add a few helper functions that return `State` actions. For example, one helper could update the player's position by moving in some direction.
 
 # The Stateful Game Loop
@@ -344,17 +344,19 @@ for {
 } yield newHealth
 ```
 
-The reason why you get these type errors will be clearer if you write out `flatMap` and all the type signatures explicitly.
+The reason why you get these type errors will be clearer if you explicitly write out `flatMap` and all the type signatures.
 
-If we think of `IO` as representing the effect of input / output, and `State` as representing the effect of updating state, then what we really want is a way to combine them both together.
+If we think of `IO` as representing the effect of IO, and `State` as representing the "effect" of updating state, then what we really want is a way to combine them both together into a single monad that captures both effects.
 
-This way, we can both perform input / output and update state in the same game loop.
+This way, we can both perform IO and update state in the same game loop.
 
-It turns out that for theoretical reasons, we can't take any two monads `M1` and `M2` and combine them into another monad `M3`. It's just not possible.
+It turns out that for theoretical reasons, we can't just take any two monads `M1` and `M2` and combine them into another monad `M3`. It's not possible!
 
 However, there are a number of ways to combine monadic effects, ranging from `Free` monads to monad zipper and views to monad coproducts (and lots more!).
 
 The particular approach we're going to look at involves *monad transformers*.
+
+ > **Note:** Like the `State` monad, monad transformers are ubiquitous, well-studied, well-supported, and do a very respectable job of composing effects.
 
 ## Monad Transformers
 
@@ -641,3 +643,12 @@ We don't need anything else to build a functional game. We have all the tools. S
 
 # Tying it all Together
 
+You now have a choice: you can take the code you've built up to this point (you have been completing the exercises, right?), or you can jump ship and use the code in the `src` directory.
+
+The code in the `src` repository builds on the material presented this far (for example, adding basic command parsing so you don't have to worry about that), and uses the Scalaz and Monocle libraries for super-powered versions of some of the classes built here (`Monad`, `StateT`, `IO` AKA `Task`, `Lens`, etc.). 
+
+Ready? Let's build that game!
+
+## Exercises
+
+ 1. 
