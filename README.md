@@ -91,38 +91,40 @@ Bet you guessed that, didn't you?
 
 ## Monads
 
-As you've [probably heard](http://en.wikipedia.org/wiki/Monad_(functional_programming)), monads are a "functional design pattern" that come up a lot when you're writing purely functional code.
+As you've [probably heard](http://en.wikipedia.org/wiki/Monad_(functional_programming)), monads are a "functional design pattern" that come up a lot when you're writing purely-functional code.
 
 There's a good reason for their ubiquity: monads encapsulate the essence of *sequential computation*.
 
-In C, statements are executed one after another. "Do this, then do that."
+In C, statements are executed one after another. Do this, then do that.
 
-In purely functional programming, there are no "statements". Instead, there are just declarations (which you can think of as rewrite rules) and expressions, which yield values.
+In purely-functional programming, there are no "statements". Instead, there are just declarations (which you can think of as rewrite rules) and expressions, which yield values.
 
-In this context, "do this, then do that" is represented very differently. That representation is *monadic*.
+In the purely-functional context, "do this, then do that" can be nicely represented using monads.
 
-Monads have two methods that obey some laws:
+Monads have two functions that obey [some laws](http://en.wikipedia.org/wiki/Monad_(functional_programming)#Monad_laws):
 
- 1. A `point` method to "lift" a value into the monad (e.g. for the `List` monad, `point` is the singleton constructor `_ :: Nil`; it lifts an individual value into a list).
- 2. A `bind` method (called `flatMap` in Scala).
+ 1. A `point` method to "lift" an ordinary value into the monad. For example, for the `List` monad, `point` is the singleton constructor `_ :: Nil`. It lifts an individual value into a `List`.
+ 2. A `bind` method to produce the *next* computation from the value of the *current* computation (called `flatMap` in Scala). For the `List` monad, this is just `List.flatMap(f: A => List[B]): List[B]`, and it calls `f` on every element to obtain lists of a different type, then merges all those lists into one list.
 
-The `flatMap` method is what encapsulates sequential computation, and you can see this fact just by looking at the type signature:
+The `bind` / `flatMap` function encodes sequential computation, and you can see this fact just by looking at the type signature:
 
 ```scala
 def flatMap[A, B](value: M[A])(f: A => M[B]): M[B]
 ```
 
-Look at the 2nd parameter that you pass to `flatMap`: it's a function that takes a value of type `A`.
+The first parameter is the monad. In Scala, if the `flatMap` method were defined on the monad itself, then you wouldn't pass it explicitly, but I've included it in the type signature for clarity.
 
-In order for the implementation of `flatMap` to call your function, it first has to produce a value of type `A`. Since `flatMap` works for all types (it's *polymorphic* in type parameter `A`), it can't produce one out of thin air!
+The second parameter is a function that takes a value of type `A`.
 
-Instead, to get a value of type `A`, `flatMap` first has to "evaluate" `M[A]` (where the meaning of "evaluate" depends entirely on the monad). 
+From looking at the type signature, you know that in order for `flatMap` to call the function you pass, `flatMap` first has to produce a value of type `A`.
 
-Thus, `M[A]` represents a computation that might yield a value of type `A` (where a container, such as `List`, is a trivial kind of computation).
+Since `flatMap` works for all types (it's *polymorphic* in type parameter `A`), it can't just produce a value of type `A` out of thin air!
 
-That is the essence of sequential computation: `flatMap` is prevented by its type signature from calling the function `f` before it produces an `A`.
+Instead, to get a value of type `A`, `flatMap` first has to "evaluate" `M[A]` (where the meaning of "evaluate" depends entirely on the monad). Thus, `M[A]` represents a computation that might yield a value of type `A`.
 
-Monads are how a lot of purely functional programs handle stateful and effectful computations.
+This is the essence of sequential computation: `flatMap` is prevented by its type signature from calling the function `f` before it produces an `A`!
+
+Monads make it easy to handle state, effects, and lots of other things in a purely-functional way. We'll take a look at effectful monads to show how that's done.
 
 ### Exercises
 
@@ -135,16 +137,16 @@ case class Error(message: String) extends Errorful[Nothing]
 case class Continue[+A](value: A) extends Errorful[A]
 ````
 
- 1. Given the above code, implement the method `flatMap`. Do you see how you can't call the function supplied to `f` without first having a value of type `A`?
+ 1. Given the above code, implement the method `flatMap`. Can you call the function `f` without first having a value of type `A`?
  2. Scala's `for` notation just compiles down to sequences of `flatMap` and `map`. Write a `for` comprehension that uses the `Errorful` monad you just wrote.
 
 ## Effectful Monads
 
-For some monads `M`, you can extract the `A` out of `M` (for a `List`, you can perform the extraction with `List.head`, though it's unsafe because the list might be empty).
+For some monads `M[A]`, you can extract the `A` out of `M[A]` (for a `List`, you can perform the extraction with `List.head`, though it's unsafe because the list might be empty).
 
-If the only way you can write such a function for some monad `M` is by "cheating" (i.e. you can't write it in a purely functional way), then the monad is called *effectful*.
+If you can't write an extraction function for some monad in a purely-functional way, then the monad is called *effectful* (indeed, for the `List` monad, extraction may throw an exception, which is an effect).
 
-Effectful monads can do anything from printing to the screen to launching nuclear missiles.
+Effectful monads can do anything from printing to the screen to launching nuclear missiles!
 
 In Haskell, the mother of all effectful monads is called `IO`, and writing code in the `IO` monad is very similar to writing code in Java or C or any other imperative language.
 
