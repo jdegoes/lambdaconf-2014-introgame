@@ -254,7 +254,17 @@ The one we're going to look at involves the *State monad*.
 
 The essence of the State monad is very simple: it's a function that takes the old state and produces the new state, together with some value.
 
-For a given type of state (call it `S`), it's pretty easy to define a *state monad*:
+To orient you, take a look at the function `pop`, which "pops" the head off a queue (represented as a `List`):
+
+```scala
+def pop[A](queue: List[A]): (List[A], A) = (queue.tail, queue.head)
+```
+
+This function takes the old state (`List[A]'), and returns both the new state (`List[A]`), together with a value representing the head of the queue (`A`).
+
+That's basically all there is to the `State` monad.
+
+For a given type of state (call it `S`), we can define the `State` monad as follows:
 
 ```scala
 case class State[S, A](run: S => (S, A)) {
@@ -271,7 +281,7 @@ object State {
 }
 ```
 
-Notice how in the definition of `flatMap`, the state is threaded through both `State.run` functions. So the final state you get has been "modified" by two functions in sequence.
+Notice how in the definition of `flatMap`, the state is threaded through both state functions. So the final state you get has been "modified" by two functions in sequence.
 
 To see how we can use `State`, let's invent a simple `GameState`:
 
