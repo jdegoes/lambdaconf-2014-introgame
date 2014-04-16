@@ -99,7 +99,7 @@ In C, statements are executed one after another. Do this, then do that.
 
 In purely-functional programming, there are no "statements". Instead, there are just declarations (which you can think of as rewrite rules) and expressions, which yield values.
 
-In the purely-functional context, "do this, then do that" can be nicely represented using monads.
+In the purely-functional context, "do this, then do that" can be represented nicely using monads.
 
 Monads have two functions that obey [some laws](http://en.wikipedia.org/wiki/Monad_(functional_programming)#Monad_laws):
 
