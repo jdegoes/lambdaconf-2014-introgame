@@ -165,7 +165,9 @@ object IO {
 }
 ```
 
-We can wrap ordinary Scala functions like `readLine()` and `println()` to make them purely functional:
+> **Note:** This definition of the `IO` monad will eventually blow the stack (see earlier discussion on trampolining!), but we'll eventually switch to Scalaz, which has a trampolined implementation that won't blow the stack.
+
+We can use `IO` to wrap ordinary Scala functions like `readLine()` and `println()` to make them purely-functional:
 
 ```scala
 def getLine: IO[String] = IO(readLine())
@@ -183,11 +185,13 @@ val rez: IO[Unit] = for {
 
 > **Note:** The underscore in the notation `_ <- putStrLn(...)` just means we don't care about the value of `Unit` that will be produced by `putStrLn` (what would we do with it?).
 
-Creating an expression of `IO[Unit]` doesn't actually do anything effectful &mdash; you need to call `run` to do that:
+Creating an expression of `IO[Unit]` doesn't actually do perform any effects &mdash; you need to call `run` to do that and extract the final value:
 
 ```scala
 rez.run
 ```
+
+Although every Scala application using `IO` will have to call `run` at some point to get some useful work done, you can push that out to the `main` function of your application, so that 99.9999% of your application code is purely-functional.
 
 We now have enough tools to write a purely functional game loop!
 
