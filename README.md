@@ -227,7 +227,7 @@ def gameLoop: IO[Unit] = for {
 gameLoop.run
 ```
 
-This version of the game loop looks a lot like the non-FP version &mdash; but except for `gameLoop.run` at the end, this code is purely functional.
+This version of the game loop looks a lot like the non-FP version &mdash; but except for `gameLoop.run` at the end, this code is purely-functional.
 
 We're off to a good start, but our game is dead boring! To solve that, we're going to have to talk *game state*.
 
@@ -240,19 +240,21 @@ We're off to a good start, but our game is dead boring! To solve that, we're goi
 
 To make our game interesting, we need to add non-player characters (NPCs), a model of the geography of the game world, a model of the player character, and a way to move around the game world and perform other activities.
 
-Every command the user enters into the game has the potential to modify NPCs, the geography, or player attributes / inventory.
+Every command the user enters into the game has the potential to modify NPCs, the geography, items in the game world, or player attributes.
 
 If you think that sounds like a lot of state, you're right!
 
-There are lots of approaches to handling this in purely functional programming. Among them: *functional reactive programming*, *event-oriented programming*, etc.
+There are many approaches to handling all this state in a purely-functional way, including *functional reactive programming* and *event-oriented programming*.
 
 The one we're going to look at involves the *State monad*.
+
+ > **Note:** The `State` monad is not always the most elegant tool for the job. But it's a good fallback when other techniques don't pan out, so it's a good thing to learn first.
 
 ## The State Monad
 
 The essence of the State monad is very simple: it's a function that takes the old state and produces the new state, together with some value.
 
-It turns out for a given type of state (let's call it `S`), it's pretty easy to define a *state monad*:
+For a given type of state (call it `S`), it's pretty easy to define a *state monad*:
 
 ```scala
 case class State[S, A](run: S => (S, A)) {
