@@ -313,7 +313,7 @@ The result is a `State` action. If we want to perform the action, we have to "ru
 
 Remember, `State` is just a function from one state to another state and some value. So to "run" `State`, all we have to do is pass it an initial game state:
 
-```
+```scala
 val stateWithNewHealth: State[GameState, Int] = for {
   _         <- updateHealth(-10)  
   newHealth <- updateHealth(-100)
@@ -437,7 +437,7 @@ But before we write a new game loop that combines state with IO, we need to tack
 
 Using our new `Game` monad, it's very easy to access and modify state. Here's the new `updateHealth` function written for the `Game` monad:
 
-```
+```scala
 def updateHealth(delta: Int): Game[Int] = StateT[IO, GameState, Int] { (s: GameState) => 
   val newHealth = s.player.health + delta
   IO((s.copy(player = s.player.copy(health = newHealth)), newHealth))
@@ -579,7 +579,7 @@ val player = Lens[GameState, PlayerState](_.player, (s, a) => s.copy(a))
 
 Using the lens is really simple:
 
-```
+```scala
 val ps = PlayerState(100)
 val h = health.get(ps)
 val newPs = health.set(ps, 200)
