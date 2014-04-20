@@ -16,7 +16,7 @@ Games are some of the most stateful applications in existence!
 
 In fact, many games are really full-fledged simulations. Almost every piece of data changes at every iteration!
 
-Can you really use pure functional programming to write games? The answer is yes, and this workshop is here to show you how.
+Can you *really* use pure functional programming to write games? The answer is yes, and this workshop is here to show you how.
 
 We're going to focus on writing a text-based RPG (or adventure game, if you like). This way, you won't need to create or animate graphics, and you can focus on the essence of handling state in a functional way.
 
@@ -74,20 +74,20 @@ def loop(): Unit = {
 loop()
 ```
 
-> **Note:** In general, unbounded recursion on the JVM will overflow the stack, but there's a robust way to work around this called *trampolining*, which basically involves stuffing steps of the recursion into data structures, and using an "interpreter" to execute the recursion step-by-step.
+> **Note:** Unbounded self-recursion on the JVM will overflow the stack, but there's a robust way to work around this called *trampolining*, which basically involves stuffing steps of the recursion into data structures, and using an "interpreter" to execute the recursion step-by-step.
 
-The above game loop is far from functional. The type signature of the function gives us no insight into what it's doing, and the guts of the function aren't any better.
+This is a good start, but the above game loop is far from purely-functional. Neither `readLine()` or `println()` are *pure functions* (deterministic functions of their input), which in a larger context, makes it harder to reason about code.
 
 How can we make this game loop more functional and easier to understand?
 
-There are lots of ways to do this, but the abstraction that's going to help you most as a functional programmer is called a *monad*.
+There are lots of ways to do this, but the abstraction that's going to help you most as a beginning functional programmer is called a *monad*.
 
 Bet you guessed that, didn't you?
 
 ### Exercises
 
- 1. Write your own game loop using recursion. Hopefully it's more interesting than the provided game loop!
- 2. Add the `scala.annotation.@tailrec` annotation to your loop to see if Scala can compiler it to a `while` loop. The compiler will give you an error if your function is not [tail-recursive](http://www.haskell.org/haskellwiki/Tail_recursion).
+ 1. Write your own game loop using recursion. Hopefully, it's more interesting than the provided game loop!
+ 2. Add the `scala.annotation.@tailrec` annotation to your loop to see if Scala can compile it to a `while` loop. The compiler will give you an error if your function is not [tail-recursive](http://www.haskell.org/haskellwiki/Tail_recursion).
 
 ## Monads
 
@@ -103,8 +103,8 @@ In the purely-functional context, "do this, then do that" can be represented nic
 
 Monads have two functions that obey [some laws](http://en.wikipedia.org/wiki/Monad_(functional_programming)#Monad_laws):
 
- 1. A `point` method to "lift" an ordinary value into the monad. For example, for the `List` monad, `point` is the singleton constructor `_ :: Nil`. It lifts an individual value into a `List`.
- 2. A `bind` method to produce the *next* computation from the value of the *current* computation (called `flatMap` in Scala). For the `List` monad, this is just `List.flatMap(f: A => List[B]): List[B]`, and it calls `f` on every element to obtain lists of a different type, then merges all those lists into one list.
+ 1. A `point` method to "lift" an ordinary value into the monad. For example, for the `List` monad, `point` is the singleton constructor `_ :: Nil`. It lifts an individual value of type `A` into a list of type `List[A]`. For the `Option` monad, `point` is the constructor `Some.apply()`, which lifts an individual value of type `A` into an option of type `Option[A]`.
+ 2. A `bind` method to produce the *next* computation from the value of the *current* computation (called `flatMap` in Scala). For the `List` monad, this is just the method `List.flatMap(f: A => List[B]): List[B]`, and it calls `f` on every element to obtain lists of a different type, then merges all those lists into one list.
 
 The `bind` / `flatMap` function encodes sequential computation, and you can see this fact just by looking at the type signature:
 
@@ -112,7 +112,7 @@ The `bind` / `flatMap` function encodes sequential computation, and you can see 
 def flatMap[A, B](value: M[A])(f: A => M[B]): M[B]
 ```
 
-The first parameter is the monad. In Scala, if the `flatMap` method were defined on the monad itself, then you wouldn't pass it explicitly, but I've included it in the type signature for clarity.
+The first parameter is the monad. In Scala, if the `flatMap` method were defined on the monad itself (like it is for `Option` and `List`), then you wouldn't pass it explicitly, but I've included it in the type signature for clarity.
 
 The second parameter is a function that takes a value of type `A`.
 
@@ -122,9 +122,9 @@ Since `flatMap` works for all types (it's *polymorphic* in type parameter `A`), 
 
 Instead, to get a value of type `A`, `flatMap` first has to "evaluate" `M[A]` (where the meaning of "evaluate" depends entirely on the monad). Thus, `M[A]` represents a computation that might yield a value of type `A`.
 
-This is the essence of sequential computation: `flatMap` is prevented by its type signature from calling the function `f` before it produces an `A`!
+This is the essence of sequential computation: `flatMap` is prevented by its type signature from calling the function `f` before it first produces an `A`!
 
-Monads make it easy to handle state, effects, and lots of other things in a purely-functional way. We'll take a look at effectful monads to show how that's done.
+Monads make it easy to handle state, effects, and lots of other things in a purely-functional way. Next, we'll take a look at effectful monads to show how that's done.
 
 ### Exercises
 
@@ -144,13 +144,15 @@ case class Continue[+A](value: A) extends Errorful[A]
 
 For some monads `M[A]`, you can extract the `A` out of `M[A]` (for a `List`, you can perform the extraction with `List.head`, though it's unsafe because the list might be empty).
 
-If you can't write an extraction function for some monad in a purely-functional way, then the monad is called *effectful* (indeed, for the `List` monad, extraction may throw an exception, which is an effect).
+If you can't write an extraction function for some monad in a purely-functional way, then the monad is called *effectful*.
 
 Effectful monads can do anything from printing to the screen to launching nuclear missiles!
 
 In Haskell, the mother of all effectful monads is called `IO`, and writing code in the `IO` monad is very similar to writing code in Java or C or any other imperative language.
 
-We can write an IO monad in just a few lines:
+The IO monad is basically a giant data structure that describes what effects to perform. You can create, compose, manipulate, and pass these `IO` values around in a purely-functional way, and nothing effectful happens until when and if you call the impure extraction function.
+
+In Scala, we can write our own IO monad in just a few lines of code:
 
 ```scala
 class IO[A] private (run0: => A) {
@@ -165,7 +167,9 @@ object IO {
 }
 ```
 
-> **Note:** This definition of the `IO` monad will eventually blow the stack (see earlier discussion on trampolining!), but we'll eventually switch to Scalaz, which has a trampolined implementation that won't blow the stack.
+> **Note:** This definition of the `IO` monad will blow the stack for deeply recursive code, but we'll eventually switch to Scalaz, which has a trampolined implementation that won't blow the stack.
+
+Notice how the constructor for `IO` simply captures the effect in a *call-by-name* parameter, so it isn't actually evaluated, it's just stored as data inside the `IO` class.
 
 We can use `IO` to wrap ordinary Scala functions like `readLine()` and `println()` to make them purely-functional:
 
@@ -174,7 +178,7 @@ def getLine: IO[String] = IO(readLine())
 def putStrLn(v: String): IO[Unit] = IO(println(v))
 ```
 
-We can then compose them together using `flatMap` or `map`, or using Scala's `for` notation:
+We can then compose `IO` actions together using `flatMap` or `map`, or using Scala's `for` notation:
 
 ```scala
 val rez: IO[Unit] = for {
@@ -185,15 +189,15 @@ val rez: IO[Unit] = for {
 
 > **Note:** The underscore in the notation `_ <- putStrLn(...)` just means we don't care about the value of `Unit` that will be produced by `putStrLn` (what would we do with it?).
 
-Creating an expression of `IO[Unit]` doesn't actually do perform any effects &mdash; you need to call `run` to do that and extract the final value:
+As you can tell from this implementation, creating an expression of `IO[Unit]` doesn't actually perform any effects &mdash; you need to call `run` to do that and extract the final value:
 
 ```scala
 rez.run
 ```
 
-Although every Scala application using `IO` will have to call `run` at some point to get some useful work done, you can push that out to the `main` function of your application, so that 99.9999% of your application code is purely-functional.
+Although every Scala application using `IO` will have to call `run` at some point to interact with the outside world, you can always push that out to the `main` function of your application, so that 99.9999% of your application code is purely-functional.
 
-We now have enough tools to write a purely functional game loop!
+We now have enough tools to write a purely-functional game loop!
 
 ### Exercises
 
@@ -248,19 +252,19 @@ There are many approaches to handling all this state in a purely-functional way,
 
 The one we're going to look at involves the *State monad*.
 
- > **Note:** The `State` monad is not always the most elegant tool for the job. But it's a good fallback when other techniques don't pan out, so it's a good thing to learn first.
+ > **Note:** The `State` monad is not always the most elegant tool for the job. But it's a good fallback when other techniques don't pan out, so it's a good tool to learn first.
 
 ## The State Monad
 
 The essence of the State monad is very simple: it's a function that takes the old state and produces the new state, together with some value.
 
-To orient you, take a look at the function `pop`, which "pops" the head off a queue (represented as a `List`):
+To orient you, take a look at the following hypothetical function `pop`, which "pops" the head off a queue (represented as a `List`):
 
 ```scala
 def pop[A](queue: List[A]): (List[A], A) = (queue.tail, queue.head)
 ```
 
-This function takes the old state (`List[A]'), and returns both the new state (`List[A]`), together with a value representing the head of the queue (`A`).
+This function takes the old state (`List[A]'), and returns both the new state (`List[A]`), together with a value representing the head of the queue (`A`), bundled in a tuple.
 
 That's basically all there is to the `State` monad.
 
@@ -346,13 +350,13 @@ for {
 
 The reason why you get these type errors will be clearer if you explicitly write out `flatMap` and all the type signatures.
 
-If we think of `IO` as representing the effect of IO, and `State` as representing the "effect" of updating state, then what we really want is a way to combine them both together into a single monad that captures both effects.
+If we think of `IO` as representing the effect of IO, and `State` as representing the "effect" of updating state, then what we really want is a way to combine them both together into a *single* monad that captures *both* effects.
 
 This way, we can both perform IO and update state in the same game loop.
 
 It turns out that for theoretical reasons, we can't just take any two monads `M1` and `M2` and combine them into another monad `M3`. It's not possible!
 
-However, there are a number of ways to combine monadic effects, ranging from `Free` monads to monad zipper and views to monad coproducts (and lots more!).
+However, there are a number of ways to combine monadic effects, ranging from `Free` monads to monad zippers and views to monad coproducts (and lots more!).
 
 The particular approach we're going to look at involves *monad transformers*.
 
@@ -418,7 +422,7 @@ Notice how the implementations of `flatMap` and `map` require that `M` be a mona
 
 We use the methods of `M`'s monad to implement the monad for `StateT`.
 
-In the case of our game, we need the state transformer to stack on `IO`. We can define a type synonym called `Game` which defines the resulting monad:
+In the case of our game, we need the state transformer to stack on `IO`. We can define a type synonym called `Game` which describes the resulting monad:
 
 ```scala
 type Game[A] = StateT[IO, GameState, A]
@@ -530,9 +534,9 @@ def gameLoop: Game[Unit] = for {
 gameLoop.run(GameState(PlayerState(100))).run
 ```
 
-Pretty cool, huh? At this point, we're literally one step away from having all the tools necessary to write a clean, purely functional game.
+Pretty cool, huh? At this point, we're literally one step away from having all the tools necessary to write a clean, purely-functional game.
 
-That one step involves making updating state simple, composable, and very powerful, in a way you can't match with mutable programming.
+That one step involves making updating state simple, composable, and very powerful, in a way you can't match with procedural programming.
 
 ### Exercises
 
@@ -555,9 +559,9 @@ Fortunately, FP has an answer, and it's called *lenses*.
 
 ## A Simple Lens
 
-A lens is a combination of a *functional getter* and a *functional setter*. Together, they give you a way of manipulating a particular field in some data.
+A lens is a combination of a *functional getter* and a *functional setter*. Together, they give you a way of manipulating a subset of data inside a data structure (which I'll sloppily call a *field*).
 
-For a data type `S`, and field type `A`, a simple lens can be defined as follows:
+For a data type `S`, and "field" type `A`, a simple lens can be defined as follows:
 
 ```scala
 case class Lens[S, A](get: S => A, set: (S, A) => S)
@@ -580,9 +584,9 @@ val player = Lens[GameState, PlayerState](_.player, (s, a) => s.copy(a))
 Using the lens is really simple:
 
 ```scala
-val ps = PlayerState(100)
-val h = health.get(ps)
-val newPs = health.set(ps, 200)
+val oldPlayer = PlayerState(100)
+val health = health.get(oldPlayer)
+val newPlayer = health.set(oldPlayer, health + 200)
 ```
 
 They great thing about lenses is that they compose in lots of useful ways. For example, we can define a new method `|->` on lens that allows you to dig deeper into a structure:
