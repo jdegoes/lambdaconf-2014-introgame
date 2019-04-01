@@ -264,7 +264,7 @@ To orient you, take a look at the following hypothetical function `pop`, which "
 def pop[A](queue: List[A]): (List[A], A) = (queue.tail, queue.head)
 ```
 
-This function takes the old state (`List[A]'), and returns both the new state (`List[A]`), together with a value representing the head of the queue (`A`), bundled in a tuple.
+This function takes the old state (`List[A]`), and returns both the new state (`List[A]`), together with a value representing the head of the queue (`A`), bundled in a tuple.
 
 That's basically all there is to the `State` monad.
 
