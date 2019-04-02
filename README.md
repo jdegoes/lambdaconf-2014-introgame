@@ -264,7 +264,7 @@ To orient you, take a look at the following hypothetical function `pop`, which "
 def pop[A](queue: List[A]): (List[A], A) = (queue.tail, queue.head)
 ```
 
-This function takes the old state (`List[A]'), and returns both the new state (`List[A]`), together with a value representing the head of the queue (`A`), bundled in a tuple.
+This function takes the old state (`List[A]`), and returns both the new state (`List[A]`), together with a value representing the head of the queue (`A`), bundled in a tuple.
 
 That's basically all there is to the `State` monad.
 
@@ -294,7 +294,7 @@ case class PlayerState(health: Int)
 case class GameState(player: PlayerState)
 ```
 
-We can now write a little helper function to update the player's health and returnthe new health value:
+We can now write a little helper function to update the player's health and return the new health value:
 
 ```scala
 def updateHealth(delta: Int): State[GameState, Int] = State { (s: GameState) => 
