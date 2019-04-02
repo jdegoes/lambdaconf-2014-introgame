@@ -294,7 +294,7 @@ case class PlayerState(health: Int)
 case class GameState(player: PlayerState)
 ```
 
-We can now write a little helper function to update the player's health and returnthe new health value:
+We can now write a little helper function to update the player's health and return the new health value:
 
 ```scala
 def updateHealth(delta: Int): State[GameState, Int] = State { (s: GameState) => 
